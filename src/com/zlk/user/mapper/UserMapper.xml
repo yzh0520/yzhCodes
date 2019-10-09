@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zlk.user.mapper.UserMapper">
+    <resultMap id="userEntityMap" type="com.zlk.user.entity.User">
+        <id property="uid" column="uid" javaType="java.lang.Integer"></id>
+        <result property="name" column="name" javaType="java.lang.String"></result>
+        <result property="pwd" column="pwd" javaType="java.lang.String"></result>
+        <result property="phone" column="phone" javaType="java.lang.String"></result>
+        <result property="card" column="card" javaType="java.lang.String"></result>
+        <result property="provice" column="provice" javaType="java.lang.String"></result>
+        <result property="city" column="city" javaType="java.lang.String"></result>
+        <result property="area" column="area" javaType="java.lang.String"></result>
+        <result property="address" column="address" javaType="java.lang.String"></result>
+        <result property="status" column="status" javaType="java.lang.String"></result>
+        <result property="createtime" column="create_time" javaType="java.util.Date"></result>
+        <result property="createuser" column="create_user" javaType="java.lang.String"></result>
+        <result property="updatetime" column="update_time" javaType="java.util.Date"></result>
+        <result property="updateuser" column="update_user" javaType="java.lang.String"></result>
+    </resultMap>
+    <!--用户登录-->
+    <select id="findUserByNameAndPwd" parameterType="com.zlk.user.entity.User" resultMap="userEntityMap">
+       select name,pwd from user where name = #{name} and pwd = #{pwd}
+    </select>
+
+    <select id="findUserByName" parameterType="com.zlk.user.entity.User" resultMap="userEntityMap">
+       select * from user where name = #{name}
+    </select>
+
+    <select id="findUserAll" parameterType="com.zlk.user.entity.Pagination" resultMap="userEntityMap">
+		select * from user limit #{startPage},#{limit}
+	</select>
+    <select id="findUserCount" parameterType="com.zlk.user.entity.Pagination" resultType="java.lang.Integer">
+		select count(1) from user
+	</select>
+
+    <delete id="deleteUserById" parameterType="java.lang.Integer">
+        delete from user where uid=#{uid}
+    </delete>
+
+    <insert id="addUser" parameterType="com.zlk.user.entity.User">
+        insert into user(name,pwd,phone,card,provice,city,area,address,status,create_time,create_user,update_time,update_user)
+        values (#{name},#{pwd},#{phone},#{card},#{provice},#{city},#{area},#{address},#{status},#{createtime},#{createuser},#{updatetime},#{updateuser})
+    </insert>
+
+    <update id="editUserById" parameterType="com.zlk.user.entity.User">
+        update user
+        <set>
+            <if test="name!=null and name!=''">
+                name= #{name},
+            </if>
+            <if test="phone!=null and phone!=''">
+                phone = #{phone},
+            </if>
+            <if test="card!=null and card!=''">
+                card = #{card},
+            </if>
+            <if test="provice!=null and provice!=''">
+                provice= #{provice} ,
+            </if>
+            <if test="city!=null and city!=''">
+                city = #{city},
+            </if>
+            <if test="area!=null and area!=''">
+                area = #{area},
+            </if>
+            <if test="address!=null and address!=''">
+                address= #{address},
+            </if>
+            <if test="status!=null and status!=''">
+                status = #{status},
+            </if>
+            <if test="updatetime!=null">
+                update_time=#{updatetime},
+            </if>
+            <if test="updateuser!=null and updateuser!=''">
+                update_user= #{updateuser}
+            </if>
+        </set>
+        where uid = #{uid}
+    </update>
+
+    <resultMap id="funEntityMap" type="com.zlk.user.entity.UserFunction">
+        <id property="funid" column="fun_id" javaType="java.lang.Integer"></id>
+        <result property="funname" column="fun_name" javaType="java.lang.String"></result>
+        <result property="url" column="url" javaType="java.lang.String"></result>
+        <result property="status" column="status" javaType="java.lang.String"></result>
+        <result property="cteateuser" column="cteate_user" javaType="java.lang.String"></result>
+        <result property="cteatetime" column="cteate_time" javaType="java.util.Date"></result>
+        <result property="pid" column="pid" javaType="java.lang.Integer"></result>
+    </resultMap>
+
+    <select id="findFunByName" parameterType="java.lang.String" resultMap="funEntityMap">
+       select fun_name from user u,user_function uf,role r,user_role ur,role_function rf where  u.name = #{name}
+       and u.uid = ur.user_id and ur.role_id = r.rid and r.rid =rf.role_id  and rf.function_id = uf.fun_id
+    </select>
+</mapper>

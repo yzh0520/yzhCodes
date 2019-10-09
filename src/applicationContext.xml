@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-4.3.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd ">
+    <!--引入外部资源配置文件-->
+    <context:property-placeholder location="classpath:db.properties"/>
+
+    <!--配置日志-->
+    <bean id="log-filter" class="com.alibaba.druid.filter.logging.Log4jFilter">
+        <property name="resultSetLogEnabled" value="true" />
+        <property name="statementLogEnabled" value="true" />
+        <!--输出可执行的SQL-->
+        <property name="statementExecutableSqlLogEnable" value="true" />
+    </bean>
+    <!--配置数据源：采用Druid连接池-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driver}"></property>
+        <property name="url" value="${jdbc.url}" />
+        <property name="username" value="${jdbc.username}" />
+        <property name="password" value="${jdbc.password}" />
+        <!-- 配置监控统计拦截的filters -->
+        <property name="filters" value="stat,log4j" />
+        <!--配置最大连接数-->
+        <property name="maxActive" value="20" />
+        <!--配置初始化大小-->
+        <property name="initialSize" value="10" />
+        <!--配置获取连接池等待超时最大时间-->
+        <property name="maxWait" value="60000" />
+        <!--配置最小连接数-->
+        <property name="minIdle" value="10" />
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="60000" />
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="600000" />
+        <property name="maxEvictableIdleTimeMillis" value="900000" />
+        <property name="testWhileIdle" value="true" />
+        <property name="testOnBorrow" value="false" />
+        <property name="testOnReturn" value="false" />
+        <!--配置连接池连接状态-->
+        <property name="poolPreparedStatements" value="true" />
+        <property name="maxOpenPreparedStatements" value="20" />
+        <!--是否采用异步初始化-->
+        <property name="asyncInit" value="true" />
+        <!--引入日志-->
+        <property name="proxyFilters">
+            <list>
+                <ref bean="log-filter"/>
+            </list>
+        </property>
+    </bean>
+    <!--配置sqlsession工厂-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <!--配置mybatis的mapper包扫描-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.zlk.*.mapper"></property>
+    </bean>
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!-- 配置aop事务 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="save*" isolation="REPEATABLE_READ" propagation="REQUIRED" read-only="false" />
+            <tx:method name="update*" isolation="REPEATABLE_READ" propagation="REQUIRED" read-only="false" />
+            <tx:method name="delete*" isolation="REPEATABLE_READ" propagation="REQUIRED" read-only="false" />
+            <tx:method name="find*" isolation="REPEATABLE_READ" propagation="REQUIRED" read-only="true" />
+            <tx:method name="select*" isolation="REPEATABLE_READ" propagation="REQUIRED" read-only="true" />
+            <tx:method name="*" isolation="REPEATABLE_READ" propagation="REQUIRED" read-only="false" />
+        </tx:attributes>
+    </tx:advice>
+    <!--配置切面-->
+    <aop:config>
+        <aop:advisor advice-ref="txAdvice" pointcut="execution(* com.zlk.*.service.*.*(..))"/>
+    </aop:config>
+    <!-- 配置service包扫描 -->
+    <context:component-scan base-package="com.zlk.*.service"></context:component-scan>
+
+    <!--此处的id需要与web.xml中的filetername一致-->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!-- 安全管理器 -->
+        <property name="securityManager" ref="securityManager"></property>
+        <!--没有登录的时候，跳转到这个页面-->
+        <property name="loginUrl" value="/user/toLogin"/>
+        <!-- 登录成功后要跳转的连接 -->
+        <property name="successUrl" value="/custom/main"/>
+        <!--当没有权限的时候，跳转到这个url-->
+        <property name="unauthorizedUrl" value="/user/nopermission"/>
+        <!-- 控制过滤规则，即以下的规则 -->
+        <property name="filterChainDefinitions">
+            <value>
+                /user/login = anon
+                /css/** = anon
+                /images/** = anon
+                /js/** = anon
+                /layui/** = anon
+                /font/** = anon
+                /validateCodeServlet = anon
+                /orders/toList = roles["订单管理"],authc
+                /custom/toList = roles["客户管理"],authc
+                /user/toList = roles["人员管理"],authc
+                /**=authc<!-- authc 表示需要认证才能访问的页面 -->
+            </value>
+        </property>
+    </bean>
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="realms" ref="securityRealm"/>
+    </bean>
+
+    <bean id="securityRealm" class="com.zlk.shiro.securityRealm"></bean>
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+</beans>

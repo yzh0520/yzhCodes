@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zlk.plan.mapper.OrdersMapper">
+    <resultMap id="ordersEntityMap" type="com.zlk.plan.entity.Orders">
+        <id property="oid" column="oid" javaType="java.lang.Integer"></id>
+        <result property="ocname" column="o_cname" javaType="java.lang.String"></result>
+        <result property="opname" column="o_pname" javaType="java.lang.String"></result>
+        <result property="onum" column="onum" javaType="java.lang.Integer"></result>
+        <result property="oprice" column="oprice" javaType="java.lang.Double"></result>
+        <result property="ounit" column="ounit" javaType="java.lang.String"></result>
+        <result property="ostate" column="ostate" javaType="java.lang.String"></result>
+        <result property="ocreatetime" column="ocreatetime" javaType="java.util.Date"></result>
+        <result property="ofinishtime" column="ofinishtime" javaType="java.util.Date"></result>
+        <result property="ops" column="ops" javaType="java.lang.String"></result>
+        <result property="oimg" column="oimg" javaType="java.lang.String"></result>
+        <result property="oacr" column="oacr" javaType="java.lang.String"></result>
+        <result property="orealimg" column="orealimg" javaType="java.lang.String"></result>
+        <result property="orealacr" column="orealacr" javaType="java.lang.String"></result>
+    </resultMap>
+    <select id="findOrdersList" parameterType="com.zlk.plan.entity.Pagination" resultMap="ordersEntityMap">
+		select * from orders limit #{startPage},#{limit}
+	</select>
+    <select id="findOrdersCount" parameterType="com.zlk.plan.entity.Pagination" resultType="java.lang.Integer">
+		select count(1) from orders
+	</select>
+    <delete id="deleteOrdersById" parameterType="java.lang.Integer">
+        delete from orders where oid=#{oid}
+    </delete>
+
+    <insert id="addOrders" parameterType="com.zlk.plan.entity.Orders">
+        insert into orders(o_cname,o_pname,onum,oprice,ounit,ostate,ocreatetime,ofinishtime,ops,oimg,oacr,orealimg,orealacr)
+        values (#{ocname},#{opname},#{onum},#{oprice},#{ounit},#{ostate},#{ocreatetime},#{ofinishtime},#{ops},#{oimg},#{oacr},#{orealimg},#{orealacr})
+    </insert>
+    <update id="editOrdersById" parameterType="com.zlk.plan.entity.Orders">
+        update orders
+        <set>
+            <if test="ocname!=null and ocname!=''">
+                o_cname =#{ocname},
+            </if>
+
+            <if test="opname!=null and opname!=''">
+                o_pname=#{opname},
+            </if>
+
+            <if test="onum!=null and onum!=''">
+                onum= #{onum},
+            </if>
+
+            <if test="oprice!=null and oprice!=''">
+                oprice= #{oprice},
+            </if>
+
+            <if test="ounit!=null and ounit!=''">
+                ounit= #{ounit},
+            </if>
+
+            <if test="ostate!=null and ostate!=''">
+                ostate= #{ostate},
+            </if>
+
+            <if test="ocreatetime!=null">
+                ocreatetime= #{ocreatetime},
+            </if>
+
+            <if test="ofinishtime!=null">
+                ofinishtime= #{ofinishtime},
+            </if>
+            <if test="ops!=null and ops!=''">
+                ops= #{ops},
+            </if>
+
+            <if test="oimg!=null and oimg!=''">
+                oimg= #{oimg},
+            </if>
+
+            <if test="oacr!=null and oacr!=''">
+                orealimg= #{orealimg},
+            </if>
+
+            <if test="orealacr!=null and orealacr!=''">
+                orealacr= #{orealacr},
+            </if>
+        </set>
+        where oid=#{oid}
+    </update>
+</mapper>
